@@ -5,6 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Set Cover Problem Tool - BCS 309</title>
     <style>
+        /* Анимация для элементов (кружочков) */
+#main-canvas div div {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Анимация для карточек сетов */
+.visualization .section-box div {
+    transition: transform 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
+}
+
+/* Эффект при выборе сета */
+.set-selected {
+    animation: pulse 0.5s ease-out;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
         :root {
             --bg-color: #0f172a;
             --panel-color: #1e293b;
@@ -154,6 +174,23 @@
 
         <div class="section-box">
             <h3>Statistics</h3>
+            <div style="margin-top:10px; border-top: 1px solid #334155; padding-top: 10px;">
+    <label style="color: #94a3b8; font-size: 0.8rem; font-weight: bold;">Complexity Growth:</label>
+    <div style="font-size: 0.7rem; margin-top:5px;">
+        <div style="display: flex; justify-content: space-between;">
+            <span>Greedy: O(m*n)</span>
+            <span style="color:var(--success-color)">● Linear</span>
+        </div>
+        <div style="background:#22c55e; height:4px; width:40%; margin-top:2px; border-radius: 2px;"></div>
+        
+        <div style="display: flex; justify-content: space-between; margin-top:8px;">
+            <span>Brute-force: O(2^n)</span>
+            <span style="color:var(--error-color)">● Exponential</span>
+        </div>
+        <div style="background:#ef4444; height:4px; width:90%; margin-top:2px; border-radius: 2px;"></div>
+    </div>
+</div>
+            
             <div style="font-size: 0.9rem;">
                 Steps: <span id="step-counter" style="color:var(--accent-color)">0</span><br>
                 Selected Sets: <span id="current-cost" style="color:var(--success-color)">0</span>
