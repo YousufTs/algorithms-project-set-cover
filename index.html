@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Cover Problem Tool - BCS 309</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-color: #1e293b;
+            --accent-color: #38bdf8;
+            --text-color: #f8fafc;
+            --border-color: #334155;
+            --success-color: #22c55e;
+            --error-color: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 0.8rem 1.5rem;
+            background-color: var(--panel-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        .controls {
+            width: 320px;
+            background-color: var(--panel-color);
+            border-right: 1px solid var(--border-color);
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .visualization {
+            flex: 1;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background-color: #020617;
+            overflow-y: auto;
+        }
+
+        .section-box {
+            background: #1e293b;
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.8; }
+        button:disabled { background: #475569; cursor: not-allowed; }
+
+        h3 { margin: 0 0 10px 0; color: var(--accent-color); font-size: 1.1rem; }
+        label { font-size: 0.85rem; color: #94a3b8; }
+
+        #status-indicator {
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: #334155;
+            font-size: 0.8rem;
+        }
+
+        pre {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            margin: 0;
+            color: #94a3b8;
+        }
+
+        .comparison-badge {
+            background: #0f172a;
+            padding: 8px;
+            border-left: 4px solid var(--accent-color);
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        details summary { cursor: pointer; color: #fbbf24; font-weight: bold; margin-bottom: 5px; }
+        details p { font-size: 0.8rem; line-height: 1.4; margin: 5px 0; color: #cbd5e1; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h2 style="margin:0; font-size: 1.2rem;">Set Cover Tool</h2>
+        <small style="color: #94a3b8;">BCS 309 Algorithms I - Yousuf Tahiri</small>
+    </div>
+    <div id="status-indicator">System Ready</div>
+</header>
+
+<div class="container">
+    <!-- ЛЕВАЯ ПАНЕЛЬ -->
+    <aside class="controls">
+        <div class="section-box">
+            <h3>Configuration</h3>
+            <select id="example-select" style="width:100%; padding: 8px; background: #0f172a; color: white; border: 1px solid var(--border-color); margin-bottom: 10px;">
+                <option value="ex1">Example 1: Small (Optimal)</option>
+                <option value="ex2">Example 2: Medium Instance</option>
+                <option value="ex3">Example 3: Greedy Gap (Worst Case)</option>
+            </select>
+            <button id="btn-build">Build Instance</button>
+        </div>
+
+        <div class="section-box">
+            <h3>Execution</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                <button id="btn-play">Play</button>
+                <button id="btn-step">Step</button>
+            </div>
+            <button id="btn-reset" style="background:#64748b; color: white;">Reset</button>
+            <div style="margin-top:10px;">
+                <label>Speed Slider:</label>
+                <input type="range" id="speed-slider" min="1" max="10" value="5" style="width:100%;">
+            </div>
+        </div>
+
+        <div class="section-box">
+            <h3>Statistics</h3>
+            <div style="font-size: 0.9rem;">
+                Steps: <span id="step-counter" style="color:var(--accent-color)">0</span><br>
+                Selected Sets: <span id="current-cost" style="color:var(--success-color)">0</span>
+            </div>
+        </div>
+
+        <!-- ПСЕВДОКОД -->
+        <div class="section-box" style="background: #020617; border: 1px solid var(--accent-color);">
+            <h3>Greedy Pseudocode</h3>
+            <pre id="pseudocode">
+<span id="line-1">1. Uncovered = Universe U</span>
+<span id="line-2">2. Selected = {}</span>
+<span id="line-3">3. while Uncovered != empty:</span>
+<span id="line-4">4.   S = set with max overlap</span>
+<span id="line-5">5.   Add S to Selected</span>
+<span id="line-6">6.   Remove S from Uncovered</span>
+<span id="line-7">7. return Selected</span>
+            </pre>
+        </div>
+    </aside>
+
+    <!-- ЦЕНТРАЛЬНАЯ ЧАСТЬ -->
+    <div id="np-proof-section" class="controls" style="display:none; width: 350px;">
+        <div class="section-box">
+            <h3 style="color: #fbbf24;">NP-Completeness Proof</h3>
+            <details open>
+                <summary>1. Membership in NP</summary>
+                <p><b>Certificate:</b> Subset of sets C'.<br><b>Verifier:</b> Check if |C'| ≤ k and union covers U. Done in polynomial O(m*n) time.</p>
+            </details>
+            <details>
+                <summary>2. Reduction (VC)</summary>
+                <p>Reduce <b>Vertex Cover</b> to <b>Set Cover</b>.<br>Edges in G → Universe U.<br>Vertices in G → Sets in C.</p>
+            </details>
+            <details>
+                <summary>3. Correctness</summary>
+                <p><b>Forward:</b> k-vertex cover covers all edges.<br><b>Backward:</b> k-sets covering U correspond to k vertices touching all edges.</p>
+            </details>
+        </div>
+    </div>
+
+    <!-- ПРАВАЯ ЧАСТЬ: ВИЗУАЛИЗАЦИЯ -->
+    <main class="visualization">
+        <div id="comparison-panel" class="comparison-badge" style="display:none;">
+            <strong>Comparison:</strong> Greedy: <span id="greedy-res">0</span> | Brute-Force: <span id="brute-res">0</span>
+        </div>
+
+        <div id="main-canvas" style="flex:1;">
+            <div style="text-align: center; margin-top: 100px; color: #475569;">
+                Select an example and click "Build Instance" to visualize
+            </div>
+        </div>
+
+        <div class="section-box" style="min-height: 80px; border-top: 3px solid var(--accent-color);">
+            <h3 style="font-size: 0.9rem;">Step Explanation</h3>
+            <div id="step-text" style="font-size: 0.9rem;">Ready to begin simulation.</div>
+        </div>
+    </main>
+</div>
+
+<script>
+const examples = {
+    ex1: { 
+        u: [1, 2, 3, 4], 
+        sets: [
+            {id:'S1', e:[1,2]}, 
+            {id:'S2', e:[2,3]}, 
+            {id:'S3', e:[3,4]}
+        ], 
+        k: 2,
+        desc: "Small Case: 2 steps needed." 
+    },
+    ex2: { 
+        u: [1, 2, 3, 4, 5, 6, 7, 8], 
+        sets: [
+            {id:'S1', e:[1,2]}, {id:'S2', e:[3,4]}, 
+            {id:'S3', e:[5,6]}, {id:'S4', e:[7,8]},
+            {id:'S5', e:[1,3,5,7]}
+        ], 
+        k: 4,
+        desc: "Medium Case: 4 steps if greedy picks small sets." 
+    },
+    ex3: { 
+    u: [1, 2, 3, 4, 5, 6], 
+    sets: [
+        {id:'S1', e:[1,2,3,4]}, // Greedy берет это первым (4 элемента)
+        {id:'S2', e:[1,5]},      // Оптимальный выбор 1
+        {id:'S3', e:[2,3,4,6]},  // Оптимальный выбор 2 (S2+S3 закроют всё за 2 шага)
+        {id:'S4', e:[5]},        // Greedy придется брать это вторым
+        {id:'S5', e:[6]}         // Greedy придется брать это третьим
+    ], 
+    k: 2
+    }
+};
+
+    let currentData = null, uncovered = [], selectedSets = [], stepCount = 0, isPaused = true, timer = null, bruteForceResult = [];
+
+    const btnBuild = document.getElementById('btn-build');
+    const btnStep = document.getElementById('btn-step');
+    const btnPlay = document.getElementById('btn-play');
+    const mainCanvas = document.getElementById('main-canvas');
+    const stepText = document.getElementById('step-text');
+
+    btnBuild.addEventListener('click', () => {
+        const val = document.getElementById('example-select').value;
+        currentData = JSON.parse(JSON.stringify(examples[val]));
+        resetSimulation();
+        document.getElementById('np-proof-section').style.display = 'flex';
+        document.getElementById('comparison-panel').style.display = 'block';
+        bruteForceResult = runBruteForce(currentData.u, currentData.sets);
+        document.getElementById('brute-res').innerText = bruteForceResult.length;
+        render();
+        stepText.innerText = "Instance built. Optimal solution requires " + bruteForceResult.length + " sets.";
+    });
+
+    function resetSimulation() {
+        if (!currentData) return;
+        uncovered = [...currentData.u];
+        selectedSets = [];
+        stepCount = 0;
+        isPaused = true;
+        if (timer) clearInterval(timer);
+        document.getElementById('step-counter').innerText = '0';
+        document.getElementById('current-cost').innerText = '0';
+        document.getElementById('greedy-res').innerText = '0';
+        btnPlay.disabled = false;
+        resetCodeHighlight();
+    }
+
+    function resetCodeHighlight() {
+        for(let i=1; i<=7; i++) document.getElementById(`line-${i}`).style.color = '#94a3b8';
+    }
+
+    function runBruteForce(U, Sets) {
+        let n = Sets.length, best = Sets.map(s => s.id);
+        for (let i = 1; i < (1 << n); i++) {
+            let current = [], covered = new Set();
+            for (let j = 0; j < n; j++) {
+                if ((i >> j) & 1) {
+                    current.push(Sets[j].id);
+                    Sets[j].e.forEach(el => covered.add(el));
+                }
+            }
+            if (covered.size === U.length && current.length < best.length) best = current;
+        }
+        return best;
+    }
+
+    btnStep.addEventListener('click', () => { greedyStep(); });
+    btnPlay.addEventListener('click', () => {
+        isPaused = false;
+        btnPlay.disabled = true;
+        timer = setInterval(() => {
+            if (uncovered.length === 0 || isPaused) { clearInterval(timer); btnPlay.disabled = false; }
+            else greedyStep();
+        }, 1000 / document.getElementById('speed-slider').value);
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => { resetSimulation(); render(); });
+
+    function greedyStep() {
+        if (uncovered.length === 0) return;
+        resetCodeHighlight();
+        document.getElementById('line-3').style.color = '#38bdf8';
+
+        let bestSet = null, maxCovered = -1;
+        document.getElementById('line-4').style.color = '#38bdf8';
+
+        currentData.sets.forEach(s => {
+            if (selectedSets.includes(s.id)) return;
+            const count = s.e.filter(el => uncovered.includes(el)).length;
+            if (count > maxCovered) { maxCovered = count; bestSet = s; }
+        });
+
+        if (bestSet && maxCovered > 0) {
+            selectedSets.push(bestSet.id);
+            document.getElementById('line-5').style.color = '#22c55e';
+            uncovered = uncovered.filter(el => !bestSet.e.includes(el));
+            document.getElementById('line-6').style.color = '#fbbf24';
+            
+            stepCount++;
+            document.getElementById('step-counter').innerText = stepCount;
+            document.getElementById('current-cost').innerText = selectedSets.length;
+            document.getElementById('greedy-res').innerText = selectedSets.length;
+            render();
+            stepText.innerText = `Picked ${bestSet.id} (+${maxCovered} elements).`;
+            
+            if (uncovered.length === 0) {
+                document.getElementById('line-7').style.color = '#22c55e';
+                const opt = selectedSets.length === bruteForceResult.length;
+                stepText.innerHTML = `<b>Done!</b> Greedy: ${selectedSets.length}. Optimal: ${bruteForceResult.length}. <br>Result is ${opt ? 'Optimal' : 'Approximate'}.`;
+            }
+        }
+    }
+
+    function render() {
+        if (!currentData) return;
+        let html = `<div style="display:flex; flex-direction:column; gap:20px;">`;
+        html += `<div><strong>Uncovered:</strong><div style="display:flex; gap:8px; margin-top:10px;">`;
+        currentData.u.forEach(el => {
+            const ok = !uncovered.includes(el);
+            html += `<div style="width:35px; height:35px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:2px solid ${ok?'#22c55e':'#475569'}; background:${ok?'#14532d':'transparent'};">${el}</div>`;
+        });
+        html += `</div></div><div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:10px;">`;
+        currentData.sets.forEach(s => {
+            const sel = selectedSets.includes(s.id);
+            html += `<div style="padding:10px; border-radius:8px; border:2px solid ${sel?'#22c55e':'#334155'}; background:${sel?'#1e293b':'#0f172a'}; opacity:${sel?1:0.7};">
+                <div style="color:#38bdf8; font-weight:bold;">${s.id} ${sel?'✓':''}</div>
+                <div style="font-size:0.75rem;">{${s.e.join(',')}}</div>
+            </div>`;
+        });
+        html += `</div></div>`;
+        mainCanvas.innerHTML = html;
+    }
+</script>
+
+</body>
+</html>
