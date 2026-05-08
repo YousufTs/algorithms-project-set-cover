@@ -5,6 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Set Cover Problem Tool - BCS 309</title>
     <style>
+        /* Добавь это в блок <style> */
+.set-card:hover {
+    border-color: #3b82f6; /* Подсветка при наведении */
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+    transform: translateY(-2px);
+}
+
+.element-node {
+    border: 2px solid #475569;
+    position: relative;
+}
+
+/* Эффект связи */
+.element-node.covered::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(34, 197, 94, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse-ring 1.5s infinite;
+}
+
+@keyframes pulse-ring {
+    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
         /* Анимация для элементов (кружочков) */
 #main-canvas div div {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -143,8 +173,60 @@
         <h2 style="margin:0; font-size: 1.2rem;">Set Cover Tool</h2>
         <small style="color: #94a3b8;">BCS 309 Algorithms I - Yousuf Tahiri</small>
     </div>
-    <div id="status-indicator">System Ready</div>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <button id="btn-info" onclick="toggleInfo()" style="width:auto; padding: 4px 14px; font-size:0.8rem; background:#334155; color:#38bdf8; border: 1px solid #38bdf8;">📖 What is Set Cover?</button>
+        <div id="status-indicator">System Ready</div>
+    </div>
 </header>
+
+<div id="info-banner" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-bottom: 2px solid #38bdf8; padding: 0; overflow: hidden; max-height: 0; transition: max-height 0.5s ease;">
+    <div style="padding: 1.5rem 2rem; display: flex; gap: 2rem; flex-wrap: wrap;">
+
+        <div style="flex: 1; min-width: 220px;">
+            <div style="color: #38bdf8; font-size: 0.7rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;">What is Set Cover?</div>
+            <p style="margin: 0; font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
+                Given a <span style="color:#38bdf8; font-weight:bold;">universe U</span> of elements and a collection of subsets,
+                can we select <span style="color:#fbbf24; font-weight:bold;">at most k subsets</span> whose union covers <em>all</em> elements?
+            </p>
+            <div style="margin-top: 10px; padding: 8px 10px; background: #0f172a; border-left: 3px solid #38bdf8; border-radius: 3px; font-size: 0.78rem; color: #94a3b8;">
+                📡 Example: 6 city districts need Wi-Fi. Each tower covers some districts. Can k towers cover all districts?
+            </div>
+        </div>
+
+        <div style="flex: 1; min-width: 220px;">
+            <div style="color: #fbbf24; font-size: 0.7rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;">The Core Idea</div>
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:#22c55e; font-size:1rem;">①</span>
+                    <span style="color:#cbd5e1;"><b style="color:#f8fafc;">NP-Complete</b> — hard to find optimal solution, easy to verify one</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:#22c55e; font-size:1rem;">②</span>
+                    <span style="color:#cbd5e1;"><b style="color:#f8fafc;">Brute-force</b> — tries all 2ⁿ combinations, always optimal but exponential</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:#22c55e; font-size:1rem;">③</span>
+                    <span style="color:#cbd5e1;"><b style="color:#f8fafc;">Greedy</b> — always picks the set covering the most uncovered elements</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:#ef4444; font-size:1rem;">④</span>
+                    <span style="color:#cbd5e1;">Greedy may <b style="color:#f8fafc;">miss the optimum</b> — guaranteed within <b style="color:#38bdf8;">ln(n) × OPT</b></span>
+                </div>
+            </div>
+        </div>
+
+        <div style="flex: 1; min-width: 220px;">
+            <div style="color: #a78bfa; font-size: 0.7rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;">Formal Definition</div>
+            <div style="background: #0f172a; border-radius: 6px; padding: 10px; font-family: 'Courier New', monospace; font-size: 0.75rem; color: #94a3b8; line-height: 1.8;">
+                <span style="color:#38bdf8;">Input:</span> Universe U, Collection C, integer k<br>
+                <span style="color:#38bdf8;">Question:</span> ∃ C' ⊆ C such that<br>
+                &nbsp;&nbsp;&nbsp;|C'| ≤ k  <span style="color:#22c55e;">// at most k sets</span><br>
+                &nbsp;&nbsp;&nbsp;∪C' = U  <span style="color:#22c55e;">// covers all of U</span>
+            </div>
+        </div>
+
+    </div>
+</div>
 
 <div class="container">
     <!-- ЛЕВАЯ ПАНЕЛЬ -->
@@ -230,7 +312,15 @@
             </details>
         </div>
     </div>
-
+<div id="brute-force-monitor" style="margin-bottom: 15px; padding: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 8px; display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: #ef4444; font-weight: bold; font-size: 0.8rem;">Brute-Force Computing...</span>
+        <span id="brute-progress" style="font-family: monospace; font-size: 0.8rem;">0/64 combinations</span>
+    </div>
+    <div style="width: 100%; background: #334155; height: 6px; border-radius: 3px; margin-top: 8px;">
+        <div id="brute-bar" style="width: 0%; background: #ef4444; height: 100%; border-radius: 3px; transition: width 0.1s;"></div>
+    </div>
+</div>
     <!-- ПРАВАЯ ЧАСТЬ: ВИЗУАЛИЗАЦИЯ -->
     <main class="visualization">
         <div id="comparison-panel" class="comparison-badge" style="display:none;">
@@ -251,6 +341,20 @@
 </div>
 
 <script>
+function toggleInfo() {
+    const banner = document.getElementById('info-banner');
+    const btn = document.getElementById('btn-info');
+    if (banner.style.maxHeight === '0px' || banner.style.maxHeight === '') {
+        banner.style.maxHeight = '400px';
+        btn.style.background = '#1e3a5f';
+        btn.textContent = '✖ Close';
+    } else {
+        banner.style.maxHeight = '0px';
+        btn.style.background = '#334155';
+        btn.textContent = '📖 What is Set Cover?';
+    }
+}
+
 const examples = {
     ex1: { 
         u: [1, 2, 3, 4], 
